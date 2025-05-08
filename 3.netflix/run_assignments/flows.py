@@ -1,31 +1,22 @@
-# on_road_experiments/service.py
+# run_assignments/flows.py
 
-from src.on_road_experiments.models import OnRoadExperiment
-from src.run_assignments.models import RunAssignment
-from src.database import SessionLocal
+from src.run_assignments import service as assignment_service
+from src.on_road_experiments import service as experiment_service
 
-def get_experiment_by_id(experiment_id: str) -> OnRoadExperiment:
-    session = SessionLocal()
-    try:
-        return session.query(OnRoadExperiment).filter(OnRoadExperiment.id == experiment_id).first()
-    finally:
-        session.close()
+def complete_assignment_flow(assignment_id: str):
+    """Flow that handles the entire logic of completing a RunAssignment 
+    and possibly completing the experiment."""
+    # 1. Mark the assignment complete
+    assignment = assignment_service.complete_assignment(assignment_id)
 
-def save_experiment(experiment: OnRoadExperiment):
-    session = SessionLocal()
-    try:
-        session.add(experiment)
-        session.commit()
-    finally:
-        session.close()
+    # 2. Check if the experiment is now all complete
+    experiment = experiment_service.get_experiment_by_id(assignment.experiment_id)
+    if experiment and experiment_service.is_all_assignments_complete(experiment):
+        # 3. Mark the experiment complete
+        experiment_service.mark_experiment_complete(experiment.id)
+    
+        # 4. Optionally send Slack notification or trigger plugin
+        # dispatch_slack_message(...), etc.
 
-def is_all_assignments_complete(experiment: OnRoadExperiment) -> bool:
-    return all(a.status == "complete" for a in experiment.run_assignments)
-
-def mark_experiment_complete(experiment_id: str):
-    experiment = get_experiment_by_id(experiment_id)
-    if not experiment:
-        raise ValueError("Experiment not found")
-
-    experiment.status = "complete"
-    save_experiment(experiment)
+# team seemed to like this structure
+# 

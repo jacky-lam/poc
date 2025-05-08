@@ -1,3 +1,5 @@
+Example: https://github.com/Netflix/dispatch/tree/main/src/dispatch
+
 In Netflix Dispatch, each domain folder typically contains at least:
 
 - `models.py`: SQLAlchemy model definitions (including relationships).

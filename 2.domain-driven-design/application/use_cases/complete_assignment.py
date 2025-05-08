@@ -20,15 +20,15 @@ def complete_assignment(assignment_id: str):
     if not experiment:
         raise ValueError("Parent experiment not found")
 
-    # 5. We also need the full set of run_assignments
-    #    (the repository could load them or they might be lazy loaded, 
-    #     or we do a separate call to get them all)
-    all_assignments = RunAssignmentRepository.get_by_experiment_id(experiment.experiment_id)
-
-    # 6. Update the experiment entity’s “run_assignments” 
-    experiment.run_assignments = all_assignments
-
     # 7. Domain logic to see if experiment is done
     if experiment.is_all_assignments_complete():
         experiment.mark_complete()
         OnRoadExperimentRepository.save(experiment)
+
+
+# FleetOps currently does this
+# - team felt its easy to lose track 
+# - might not be easy to understand separation the logic between "domain" + "application" + "repository"
+# - q: is it we're not use to it?
+    # a: there seems to be duplication in domain layer (from a few people)
+    # a: old video-transcoder had similar issue
